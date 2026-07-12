@@ -1,80 +1,83 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import client, { setAuthContextRef } from "../api/client";
+import { createContext, useContext, useState, useEffect } from 'react'
+import client from '../api/client'
 
-const AuthContext = createContext(null);
+const AuthContext = createContext(null)
 
-const initialAuthState = {
-  user: null,
-  accessToken: null,
-  refreshToken: null,
-  role: null,
-};
-
-export function AuthProvider({ children }) {
-  const [authState, setAuthState] = useState(initialAuthState);
-
-  const setAccessToken = useCallback((accessToken) => {
-    setAuthState((previous) => ({ ...previous, accessToken }));
-  }, []);
-
-  const clearAuth = useCallback(() => {
-    setAuthState(initialAuthState);
-  }, []);
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setAuthContextRef({
-      accessToken: authState.accessToken,
-      refreshToken: authState.refreshToken,
-      setAccessToken,
-      clearAuth,
-    });
-  }, [
-    authState.accessToken,
-    authState.refreshToken,
-    clearAuth,
-    setAccessToken,
-  ]);
+    const initAuth = () => {
+      const storedUser = localStorage.getItem('user')
+      const token = localStorage.getItem('access_token')
+      if (storedUser && token) {
+        try {
+          setUser(JSON.parse(storedUser))
+        } catch (e) {
+          localStorage.removeItem('user')
+          localStorage.removeItem('access_token')
+          localStorage.removeItem('refresh_token')
+        }
+      }
+      setLoading(false)
+    }
+    initAuth()
+  }, [])
 
-  const login = useCallback(async (email, password) => {
-    const response = await client.post("/auth/login/", { email, password });
-    const { access, refresh, role, user } = response.data;
-    setAuthState({ user, accessToken: access, refreshToken: refresh, role });
-    return response.data;
-  }, []);
+  const login = async (email, password) => {
+    setLoading(true)
+    try {
+      const response = await client.post('/auth/login/', { email, password })
+      const { access, refresh, role, user: userData } = response.data
+      
+      localStorage.setItem('access_token', access)
+      localStorage.setItem('refresh_token', refresh)
+      localStorage.setItem('role', role)
+      localStorage.setItem('user', JSON.stringify(userData))
+      
+      setUser(userData)
+      return { success: true }
+    } catch (error) {
+      console.error('Login error:', error)
+      return {
+        success: false,
+        error: error.response?.data?.error?.message || 'Invalid email or password'
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  const signup = useCallback(async (payload) => {
-    const response = await client.post("/auth/signup/", payload);
-    return response.data;
-  }, []);
+  const logout = () => {
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
+    localStorage.removeItem('role')
+    localStorage.removeItem('user')
+    setUser(null)
+  }
 
-  const logout = useCallback(() => {
-    setAuthState(initialAuthState);
-  }, []);
+  const hasRole = (roles) => {
+    if (!user) return false
+    const currentRole = localStorage.getItem('role')
+    return roles.includes(currentRole)
+  }
 
-  const value = useMemo(
-    () => ({
-      ...authState,
-      login,
-      signup,
-      logout,
-    }),
-    [authState, login, signup, logout],
-  );
+  const getRole = () => {
+    return localStorage.getItem('role')
+  }
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated: !!user, hasRole, getRole }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext)
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider')
   }
-  return context;
+  return context
 }
