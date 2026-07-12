@@ -49,6 +49,19 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  const signup = async (payload) => {
+    try {
+      const response = await client.post('/auth/signup/', payload)
+      return { success: true, data: response.data }
+    } catch (error) {
+      console.error('Signup error:', error)
+      return {
+        success: false,
+        error: error.response?.data?.error?.message || 'Failed to create account'
+      }
+    }
+  }
+
   const logout = () => {
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
@@ -68,7 +81,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated: !!user, hasRole, getRole }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, isAuthenticated: !!user, hasRole, getRole }}>
       {children}
     </AuthContext.Provider>
   )

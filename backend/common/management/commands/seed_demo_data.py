@@ -10,6 +10,17 @@ class Command(BaseCommand):
     help = 'Seed demo data (idempotent)'
 
     def handle(self, *args, **options):
+        # Clean up existing operational logs for a fresh demo start
+        self.stdout.write("Deleting existing trips, maintenance tickets, fuel logs, and operational expenses...")
+        from trips.models import Trip
+        from maintenance.models import MaintenanceLog
+        from finance.models import FuelLog, Expense
+        
+        Trip.objects.all().delete()
+        MaintenanceLog.objects.all().delete()
+        FuelLog.objects.all().delete()
+        Expense.objects.all().delete()
+
         # --- Users ---
         users_data = [
             {
@@ -61,10 +72,17 @@ class Command(BaseCommand):
                 'status': 'Available',
             },
         )
-        if created:
-            self.stdout.write(self.style.SUCCESS(f"Created vehicle: {vehicle}"))
+        if not created:
+            vehicle.name_model = 'Tata Ace Van-05'
+            vehicle.type = 'Van'
+            vehicle.max_load_capacity = 500.00
+            vehicle.odometer = 12500
+            vehicle.acquisition_cost = 650000
+            vehicle.status = 'Available'
+            vehicle.save()
+            self.stdout.write(f"Reset vehicle: {vehicle}")
         else:
-            self.stdout.write(f"Vehicle already exists: {vehicle}")
+            self.stdout.write(self.style.SUCCESS(f"Created vehicle: {vehicle}"))
 
         # --- Driver ---
         driver, created = Driver.objects.get_or_create(
@@ -78,9 +96,16 @@ class Command(BaseCommand):
                 'status': 'Available',
             },
         )
-        if created:
-            self.stdout.write(self.style.SUCCESS(f"Created driver: {driver}"))
+        if not created:
+            driver.name = 'Alex Fernandes'
+            driver.license_category = 'LMV'
+            driver.license_expiry = date(2027, 5, 1)
+            driver.contact_number = '9876543210'
+            driver.safety_score = 100
+            driver.status = 'Available'
+            driver.save()
+            self.stdout.write(f"Reset driver: {driver}")
         else:
-            self.stdout.write(f"Driver already exists: {driver}")
+            self.stdout.write(self.style.SUCCESS(f"Created driver: {driver}"))
 
         self.stdout.write(self.style.SUCCESS('Seed complete.'))

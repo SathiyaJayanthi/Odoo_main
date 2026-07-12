@@ -43,6 +43,22 @@ class AuthAPITests(APITestCase):
         self.assertTrue(user.check_password('SecurePass123'))
         self.assertNotEqual(user.password, 'SecurePass123')
 
+    def test_signup_without_role_creates_driver_by_default(self):
+        response = self.client.post(
+            reverse('signup'),
+            {
+                'email': 'default.role@example.com',
+                'password': 'SecurePass123',
+                'full_name': 'Default Role User',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['role'], 'driver')
+        user = User.objects.get(email='default.role@example.com')
+        self.assertEqual(user.role, 'driver')
+
     def test_signup_rejects_duplicate_email(self):
         User.objects.create_user(
             email='duplicate@example.com',

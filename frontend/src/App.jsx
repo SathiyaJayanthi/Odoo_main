@@ -3,11 +3,13 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
 import AppLayout from './components/layout/AppLayout'
 import Login from './pages/Login'
+import Signup from './pages/Signup'
 import Dashboard from './pages/Dashboard'
 import VehiclesPage from './pages/vehicles/VehiclesPage'
 import DriversPage from './pages/drivers/DriversPage'
 import MaintenancePage from './pages/maintenance/MaintenancePage'
 import FinancePage from './pages/finance/FinancePage'
+import TripsPage from './pages/trips/TripsPage'
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth()
@@ -45,6 +47,7 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+          <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
           <Route
             path="/*"
             element={
@@ -55,6 +58,7 @@ function App() {
                     <Route path="vehicles" element={<VehiclesPage />} />
                     <Route path="drivers" element={<DriversPage />} />
                     <Route path="maintenance" element={<MaintenancePage />} />
+                    <Route path="trips" element={<TripsPage />} />
                     <Route path="finance" element={<FinancePage />} />
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                   </Routes>
