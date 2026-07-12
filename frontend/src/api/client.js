@@ -1,35 +1,89 @@
-import axios from 'axios'
+import axios from "axios";
 
 const client = axios.create({
-  baseURL: 'http://localhost:8000/api/v1',
+  baseURL: "http://localhost:8000/api/v1",
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
-})
+});
 
-// Request interceptor: attach JWT access token
+let authContextRef = {
+  current: {
+    accessToken: null,
+    refreshToken: null,
+    setAccessToken: () => {},
+    clearAuth: () => {},
+  },
+};
+
+export function setAuthContextRef(ref) {
+  authContextRef.current = ref;
+}
+
+let refreshPromise = null;
+
 client.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token')
+    const token = authContextRef.current?.accessToken;
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    return config
+    return config;
   },
-  (error) => Promise.reject(error)
-)
+  (error) => Promise.reject(error),
+);
 
-// Response interceptor: redirect to /login on 401
 client.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('access_token')
-      localStorage.removeItem('refresh_token')
-      window.location.href = '/login'
-    }
-    return Promise.reject(error)
-  }
-)
+  async (error) => {
+    const originalRequest = error.config;
 
-export default client
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      if (!refreshPromise) {
+        refreshPromise = (async () => {
+          try {
+            const refreshToken = authContextRef.current?.refreshToken;
+            if (!refreshToken) {
+              throw new Error("No refresh token available");
+            }
+
+            const response = await axios.post(
+              "http://localhost:8000/api/v1/auth/refresh/",
+              { refresh: refreshToken },
+            );
+            const nextAccessToken = response.data?.access;
+
+            if (!nextAccessToken) {
+              throw new Error(
+                "Refresh response did not contain an access token",
+              );
+            }
+
+            authContextRef.current?.setAccessToken(nextAccessToken);
+            originalRequest.headers.Authorization = `Bearer ${nextAccessToken}`;
+            return client(originalRequest);
+          } catch (refreshError) {
+            authContextRef.current?.clearAuth();
+            window.location.assign("/login");
+            return Promise.reject(refreshError);
+          } finally {
+            refreshPromise = null;
+          }
+        })();
+      }
+
+      return refreshPromise;
+    }
+
+    if (error.response?.status === 401) {
+      authContextRef.current?.clearAuth();
+      window.location.assign("/login");
+    }
+
+    return Promise.reject(error);
+  },
+);
+
+export default client;

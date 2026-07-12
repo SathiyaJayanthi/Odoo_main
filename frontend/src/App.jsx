@@ -39,7 +39,23 @@ const PublicRoute = ({ children }) => {
   return !isAuthenticated ? children : <Navigate to="/dashboard" replace />
 }
 
-function App() {
+function ProtectedRoute({ children }) {
+  const { accessToken } = useAuth();
+
+  return accessToken ? children : <Navigate to="/login" replace />;
+}
+
+function RootRedirect() {
+  const { accessToken } = useAuth();
+
+  return accessToken ? (
+    <Navigate to="/dashboard" replace />
+  ) : (
+    <Navigate to="/login" replace />
+  );
+}
+
+function PlaceholderPage({ title }) {
   return (
     <ToastProvider>
       <AuthProvider>
@@ -68,4 +84,4 @@ function App() {
   )
 }
 
-export default App
+export default App;
