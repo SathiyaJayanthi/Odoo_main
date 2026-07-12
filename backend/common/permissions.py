@@ -3,30 +3,20 @@ from accounts.models import User
 
 
 class IsRole(BasePermission):
+    allowed_roles = []
+
     def __init__(self, allowed_roles=None):
-        self.allowed_roles = allowed_roles or []
-
-    def has_permission(self, request, view):
-        user = request.user
-        if not user or not user.is_authenticated:
-            return False
-
-        # Always validate role from the DB-backed user record, never request payload.
-        role = User.objects.filter(pk=user.pk).values_list('role', flat=True).first()
-        return role in self.allowed_roles
-
-
-class IsRole(BasePermission):
-    def __init__(self, allowed_roles=None):
-        self.allowed_roles = list(allowed_roles or [])
+        if allowed_roles is not None:
+            self.allowed_roles = list(allowed_roles)
 
     def has_permission(self, request, view):
         user = getattr(request, 'user', None)
         if not user or not getattr(user, 'is_authenticated', False):
             return False
 
+        allowed_roles = getattr(view, 'allowed_roles', self.allowed_roles)
         role = getattr(user, 'role', None)
-        return bool(role in self.allowed_roles)
+        return bool(role in allowed_roles)
 
 
 class IsFleetManager(BasePermission):
