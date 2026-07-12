@@ -15,6 +15,11 @@ export const getROI = async () => {
   return response.data
 }
 
+export const getMaintenanceAlerts = async () => {
+  const response = await client.get('/reports/maintenance-alerts/')
+  return response.data
+}
+
 export const downloadCSVReport = async () => {
   const response = await client.get('/reports/export/', {
     params: { type: 'csv' },

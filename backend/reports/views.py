@@ -3,8 +3,9 @@ from decimal import Decimal
 
 from django.http import HttpResponse
 from django.db.models import Count, Sum
+from django.utils import timezone
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -12,6 +13,7 @@ from accounts.models import User
 from common.permissions import IsRole
 from drivers.models import Driver
 from finance.services import get_vehicle_cost_summary
+from maintenance.models import MaintenanceLog
 from trips.models import Trip
 from vehicles.models import Vehicle
 
@@ -143,3 +145,58 @@ class ExportView(APIView):
             ])
 
         return response
+
+
+class MaintenanceAlertsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        today = timezone.now().date()
+        candidate_vehicles = Vehicle.objects.filter(status__in=['Available', 'On Trip'])
+
+        latest_closed_logs = (
+            MaintenanceLog.objects.filter(
+                status='Closed',
+                closed_at__isnull=False,
+                vehicle__status__in=['Available', 'On Trip'],
+            )
+            .order_by('vehicle_id', '-closed_at')
+            .values('vehicle_id', 'closed_at')
+        )
+
+        latest_closed_by_vehicle = {}
+        for row in latest_closed_logs:
+            if row['vehicle_id'] not in latest_closed_by_vehicle:
+                latest_closed_by_vehicle[row['vehicle_id']] = row['closed_at']
+
+        alerts = []
+        for vehicle in candidate_vehicles:
+            latest_closed_at = latest_closed_by_vehicle.get(vehicle.id)
+            if latest_closed_at:
+                days_since_service = (today - latest_closed_at.date()).days
+            else:
+                # Demo fallback when maintenance history is absent for a vehicle.
+                days_since_service = (today - vehicle.created_at.date()).days
+
+            # We do not store odometer-at-close yet, so current odometer is used as a proxy.
+            odometer_delta = float(vehicle.odometer or 0)
+            risk_score = (days_since_service / 90) + (odometer_delta / 10000)
+
+            if risk_score >= 1.5:
+                risk_level = 'high'
+            elif risk_score >= 0.8:
+                risk_level = 'medium'
+            else:
+                continue
+
+            alerts.append({
+                'vehicle_id': vehicle.id,
+                'registration_number': vehicle.registration_number,
+                'name_model': vehicle.name_model,
+                'days_since_service': days_since_service,
+                'risk_score': round(risk_score, 2),
+                'risk_level': risk_level,
+            })
+
+        alerts.sort(key=lambda item: item['risk_score'], reverse=True)
+        return Response(alerts)
