@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from accounts.managers import UserManager
+
 
 class User(AbstractUser):
     ROLE_CHOICES = [
@@ -19,6 +21,8 @@ class User(AbstractUser):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['full_name', 'role']
+
+    objects = UserManager()
 
     class Meta:
         db_table = 'accounts_user'
