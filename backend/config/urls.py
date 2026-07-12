@@ -15,7 +15,8 @@ class DummyIsAuthenticatedView(APIView):
 
 
 class DummyRoleView(APIView):
-    permission_classes = [IsRole(['fleet_manager'])]
+    permission_classes = [IsRole]
+    allowed_roles = ['fleet_manager']
 
     def get(self, request):
         return Response({'ok': True})

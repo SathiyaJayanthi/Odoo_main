@@ -19,7 +19,8 @@ REVENUE_PER_TRIP = Decimal('2000.00')
 
 
 class DashboardView(APIView):
-    permission_classes = [IsRole(['fleet_manager', 'driver', 'safety_officer', 'financial_analyst'])]
+    permission_classes = [IsRole]
+    allowed_roles = ['fleet_manager', 'driver', 'safety_officer', 'financial_analyst']
 
     def get(self, request):
         active_vehicles = Vehicle.objects.exclude(status='Retired').count()
@@ -45,7 +46,8 @@ class DashboardView(APIView):
 
 
 class FuelEfficiencyView(APIView):
-    permission_classes = [IsRole(['financial_analyst'])]
+    permission_classes = [IsRole]
+    allowed_roles = ['financial_analyst']
 
     def get(self, request):
         vehicle_id = request.query_params.get('vehicle_id')
@@ -78,7 +80,8 @@ class FuelEfficiencyView(APIView):
 
 
 class ROIView(APIView):
-    permission_classes = [IsRole(['financial_analyst'])]
+    permission_classes = [IsRole]
+    allowed_roles = ['financial_analyst']
 
     def get(self, request):
         vehicle_id = request.query_params.get('vehicle_id')
@@ -108,7 +111,8 @@ class ROIView(APIView):
 
 
 class ExportView(APIView):
-    permission_classes = [IsRole(['financial_analyst', 'fleet_manager'])]
+    permission_classes = [IsRole]
+    allowed_roles = ['financial_analyst', 'fleet_manager']
 
     def get(self, request):
         if request.query_params.get('type') != 'csv':
