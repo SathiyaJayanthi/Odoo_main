@@ -10,7 +10,8 @@ import {
   LogOut,
   Menu,
   X,
-  Navigation
+  Navigation,
+  BarChart2
 } from 'lucide-react'
 
 const AppLayout = ({ children }) => {
@@ -39,6 +40,7 @@ const AppLayout = ({ children }) => {
     { name: 'Trips', path: '/trips', icon: Navigation },
     { name: 'Maintenance', path: '/maintenance', icon: Wrench },
     { name: 'Finance', path: '/finance', icon: DollarSign },
+    { name: 'Reports', path: '/reports', icon: BarChart2 },
   ]
 
   const isActive = (path) => {

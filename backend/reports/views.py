@@ -49,7 +49,7 @@ class DashboardView(APIView):
 
 class FuelEfficiencyView(APIView):
     permission_classes = [IsRole]
-    allowed_roles = ['financial_analyst']
+    allowed_roles = ['financial_analyst', 'fleet_manager']
 
     def get(self, request):
         vehicle_id = request.query_params.get('vehicle_id')
@@ -83,7 +83,7 @@ class FuelEfficiencyView(APIView):
 
 class ROIView(APIView):
     permission_classes = [IsRole]
-    allowed_roles = ['financial_analyst']
+    allowed_roles = ['financial_analyst', 'fleet_manager']
 
     def get(self, request):
         vehicle_id = request.query_params.get('vehicle_id')

@@ -9,6 +9,7 @@ import DriversPage from "./pages/drivers/DriversPage";
 import MaintenancePage from "./pages/maintenance/MaintenancePage";
 import FinancePage from "./pages/finance/FinancePage";
 import TripsPage from "./pages/trips/TripsPage";
+import ReportsPage from "./pages/reports/ReportsPage";
 
 const LoadingScreen = () => (
   <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -77,6 +78,7 @@ function App() {
                 <Route path="maintenance" element={<MaintenancePage />} />
                 <Route path="trips" element={<TripsPage />} />
                 <Route path="finance" element={<FinancePage />} />
+                <Route path="reports" element={<ReportsPage />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </AppLayout>

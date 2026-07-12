@@ -20,7 +20,7 @@ class DummyRoleView(APIView):
     allowed_roles = ['fleet_manager']
 
     def get(self, request):
-
+        return Response({'ok': True})
 
 class AuthAPITests(APITestCase):
     def test_signup_creates_user_with_hashed_password_and_role(self):

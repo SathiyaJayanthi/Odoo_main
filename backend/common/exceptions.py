@@ -1,45 +1,75 @@
-from rest_framework.response import Response
 from rest_framework.views import exception_handler
-
+from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError, AuthenticationFailed, NotAuthenticated, PermissionDenied
 
 def custom_exception_handler(exc, context):
+    # Call REST framework's default exception handler first,
+    # to get the standard error response.
     response = exception_handler(exc, context)
 
-    if response is not None:
+    # If the exception is not handled by DRF (returns None),
+    # let it bubble up as a genuine 500.
+    if response is None:
+        return None
+
+    # Reshape the response into our custom schema
+    if isinstance(exc, ValidationError):
+        # Extract first error message and field name
+        first_field = None
+        first_message = 'Validation error occurred.'
+        if isinstance(response.data, dict):
+            for key, value in response.data.items():
+                if key != 'non_field_errors':
+                    first_field = key
+                if isinstance(value, list) and len(value) > 0:
+                    first_message = str(value[0])
+                else:
+                    first_message = str(value)
+                break
+        elif isinstance(response.data, list) and len(response.data) > 0:
+            first_message = str(response.data[0])
+
         error_data = {
             'error': {
-                'code': str(response.status_code),
-                'message': _get_error_message(response),
+                'code': 'validation_error',
+                'message': first_message,
+                'field': first_field
             }
         }
-        # Include field-level errors if present
-        if isinstance(response.data, dict) and len(response.data) == 1:
-            key = next(iter(response.data))
-            if key not in ('detail', 'non_field_errors') and isinstance(response.data[key], list):
-                error_data['error']['field'] = key
-                error_data['error']['message'] = response.data[key][0]
-        elif isinstance(response.data, dict) and 'detail' in response.data:
-            error_data['error']['message'] = str(response.data['detail'])
-        elif isinstance(response.data, list):
-            error_data['error']['message'] = str(response.data[0]) if response.data else 'An error occurred'
+        return Response(error_data, status=400)
 
-        return Response(error_data, status=response.status_code)
+    elif isinstance(exc, (AuthenticationFailed, NotAuthenticated)):
+        message = response.data.get('detail', 'Authentication failed.') if isinstance(response.data, dict) else 'Authentication failed.'
+        error_data = {
+            'error': {
+                'code': 'authentication_failed',
+                'message': str(message)
+            }
+        }
+        return Response(error_data, status=401)
 
-    # Unhandled exceptions (500s)
-    return Response(
-        {'error': {'code': '500', 'message': 'An internal server error occurred.'}},
-        status=500,
-    )
+    elif isinstance(exc, PermissionDenied):
+        message = response.data.get('detail', 'Permission denied.') if isinstance(response.data, dict) else 'Permission denied.'
+        error_data = {
+            'error': {
+                'code': 'permission_denied',
+                'message': str(message)
+            }
+        }
+        return Response(error_data, status=403)
 
+    # If it's some other APIException (e.g., our custom ones), format if needed
+    # but the instructions say "custom business-logic exceptions return the correct shape",
+    # so we can just return response data if it already has 'error',
+    # or wrap it if it doesn't.
+    if isinstance(response.data, dict) and 'error' in response.data:
+        return response
 
-def _get_error_message(response):
-    if isinstance(response.data, dict):
-        if 'detail' in response.data:
-            return str(response.data['detail'])
-        # Flatten first field error
-        for key, value in response.data.items():
-            if isinstance(value, list) and value:
-                return str(value[0])
-    elif isinstance(response.data, list) and response.data:
-        return str(response.data[0])
-    return 'An error occurred'
+    # Fallback shape for other DRF exceptions (like MethodNotAllowed)
+    message = response.data.get('detail', 'An error occurred.') if isinstance(response.data, dict) else 'An error occurred.'
+    return Response({
+        'error': {
+            'code': str(response.status_code),
+            'message': str(message)
+        }
+    }, status=response.status_code)

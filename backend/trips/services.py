@@ -50,57 +50,68 @@ def create_trip(user, vehicle_id, driver_id, source, destination, cargo_weight, 
     return trip
 
 
+from django.db.utils import OperationalError, IntegrityError
+
 def dispatch_trip(trip_id):
     trip = get_object_or_404(Trip, pk=trip_id)
 
-    with transaction.atomic():
-        # Lock vehicle and driver rows
-        vehicle = Vehicle.objects.select_for_update().get(pk=trip.vehicle_id)
-        driver = Driver.objects.select_for_update().get(pk=trip.driver_id)
+    try:
+        with transaction.atomic():
+            # Lock vehicle and driver rows
+            vehicle = Vehicle.objects.select_for_update().get(pk=trip.vehicle_id)
+            driver = Driver.objects.select_for_update().get(pk=trip.driver_id)
 
-        # Refresh trip state from DB in case it changed
-        trip.refresh_from_db()
+            # Refresh trip state from DB in case it changed
+            trip.refresh_from_db()
 
-        today = timezone.localdate()
+            today = timezone.localdate()
 
-        # Trip must be Draft at dispatch time
-        if trip.status != 'Draft':
-            raise ServiceError(
-                code='unavailable',
-                message=f"Trip {trip.id} is not available for dispatch.",
-                status_code=409,
-            )
+            # Trip must be Draft at dispatch time
+            if trip.status != 'Draft':
+                raise ServiceError(
+                    code='unavailable',
+                    message=f"Trip {trip.id} is not available for dispatch.",
+                    status_code=409,
+                )
 
-        if vehicle.status != 'Available':
-            raise ServiceError(
-                code='unavailable',
-                message=f"Vehicle {vehicle.registration_number} is currently unavailable for dispatch.",
-                status_code=409,
-            )
-        if driver.status != 'Available':
-            raise ServiceError(
-                code='unavailable',
-                message=f"Driver {driver.name} is currently unavailable for dispatch.",
-                status_code=409,
-            )
-        if driver.license_expiry < today:
-            raise ServiceError(
-                code='unavailable',
-                message=f"Driver {driver.name}'s license is expired.",
-                status_code=409,
-            )
+            if vehicle.status != 'Available':
+                raise ServiceError(
+                    code='unavailable',
+                    message=f"Vehicle {vehicle.registration_number} is currently unavailable for dispatch.",
+                    status_code=409,
+                )
+            if driver.status != 'Available':
+                raise ServiceError(
+                    code='unavailable',
+                    message=f"Driver {driver.name} is currently unavailable for dispatch.",
+                    status_code=409,
+                )
+            if driver.license_expiry < today:
+                raise ServiceError(
+                    code='unavailable',
+                    message=f"Driver {driver.name}'s license is expired.",
+                    status_code=409,
+                )
 
-        # All good — perform atomic updates
-        trip.status = 'Dispatched'
-        trip.dispatched_at = timezone.now()
-        vehicle.status = 'On Trip'
-        driver.status = 'On Trip'
+            # All good — perform atomic updates
+            trip.status = 'Dispatched'
+            trip.dispatched_at = timezone.now()
+            vehicle.status = 'On Trip'
+            driver.status = 'On Trip'
 
-        vehicle.save()
-        driver.save()
-        trip.save()
+            vehicle.save()
+            driver.save()
+            trip.save()
+
+    except (OperationalError, IntegrityError):
+        raise ServiceError(
+            code='unavailable',
+            message="Vehicle or driver is currently unavailable for dispatch.",
+            status_code=409,
+        )
 
     return trip
+
 
 
 def complete_trip(trip_id, final_odometer, fuel_consumed):

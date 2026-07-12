@@ -12,28 +12,9 @@ class SignupView(APIView):
 
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response(serializer.to_representation(user), status=status.HTTP_201_CREATED)
-
-        errors = serializer.errors
-        field_name = next(iter(errors), None)
-        if field_name:
-            first_error = errors[field_name][0]
-            return Response(
-                {
-                    'error': {
-                        'field': field_name,
-                        'message': first_error,
-                    }
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        return Response(
-            {'error': {'message': 'Invalid signup data'}},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response(serializer.to_representation(user), status=status.HTTP_201_CREATED)
 
 
 class LoginView(TokenObtainPairView):
@@ -42,13 +23,7 @@ class LoginView(TokenObtainPairView):
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-        except Exception:
-            return Response(
-                {'error': {'message': 'Invalid email or password'}},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
+        serializer.is_valid(raise_exception=True)
 
         data = serializer.validated_data
         return Response(
