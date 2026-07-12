@@ -53,7 +53,7 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-slate-950 flex flex-col justify-center py-8 sm:py-12 sm:px-6 lg:px-8 relative overflow-y-auto overflow-x-hidden no-scrollbar">
       {/* Background radial highlights */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />

@@ -37,13 +37,23 @@ const Login = () => {
     setIsLoading(false)
   }
 
-  const handleSelectDemo = (demoEmail) => {
+  const handleSelectDemo = async (demoEmail) => {
     setEmail(demoEmail)
-    setPassword('demopass123')
+    // auto-submit demo credentials for convenience without touching setPassword
+    setIsLoading(true)
+    const result = await login(demoEmail, 'demopass123')
+    setIsLoading(false)
+    if (result.success) {
+      toast.success('Signed in as demo user')
+      navigate('/dashboard')
+    } else {
+      setError(result.error)
+      toast.error(result.error)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-slate-900 flex flex-col justify-center py-8 sm:py-12 sm:px-6 lg:px-8 relative overflow-y-auto overflow-x-hidden no-scrollbar">
       {/* Background gradients */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -translate-x-1/2 -translate-y-1/2" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none translate-x-1/2 translate-y-1/2" />

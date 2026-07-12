@@ -16,6 +16,21 @@
   box-sizing: border-box;
 }
 
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
   margin: 0;
   font-family:
@@ -28,6 +43,7 @@ body {
     sans-serif;
   background-color: var(--color-background);
   color: var(--color-text);
+  overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

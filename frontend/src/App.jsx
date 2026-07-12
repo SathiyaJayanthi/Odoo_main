@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./context/AuthContext";
-import { ToastProvider } from "./context/ToastContext";
+import { useAuth } from "./context/AuthContext";
 import AppLayout from "./components/layout/AppLayout";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -49,49 +48,42 @@ const PublicRoute = ({ children }) => {
 
 function App() {
   return (
-    <ToastProvider>
-      <AuthProvider>
-        <Routes>
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                <Login />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/signup"
-            element={
-              <PublicRoute>
-                <Signup />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/*"
-            element={
-              <ProtectedRoute>
-                <AppLayout>
-                  <Routes>
-                    <Route path="dashboard" element={<Dashboard />} />
-                    <Route path="vehicles" element={<VehiclesPage />} />
-                    <Route path="drivers" element={<DriversPage />} />
-                    <Route path="maintenance" element={<MaintenancePage />} />
-                    <Route path="trips" element={<TripsPage />} />
-                    <Route path="finance" element={<FinancePage />} />
-                    <Route
-                      path="*"
-                      element={<Navigate to="/dashboard" replace />}
-                    />
-                  </Routes>
-                </AppLayout>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </AuthProvider>
-    </ToastProvider>
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/signup"
+        element={
+          <PublicRoute>
+            <Signup />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/*"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <Routes>
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="vehicles" element={<VehiclesPage />} />
+                <Route path="drivers" element={<DriversPage />} />
+                <Route path="maintenance" element={<MaintenancePage />} />
+                <Route path="trips" element={<TripsPage />} />
+                <Route path="finance" element={<FinancePage />} />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   );
 }
 
