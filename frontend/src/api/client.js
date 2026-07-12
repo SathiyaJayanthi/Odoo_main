@@ -24,7 +24,7 @@ let refreshPromise = null;
 
 client.interceptors.request.use(
   (config) => {
-    const token = authContextRef.current?.accessToken;
+    const token = authContextRef.current?.accessToken || localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -44,7 +44,7 @@ client.interceptors.response.use(
       if (!refreshPromise) {
         refreshPromise = (async () => {
           try {
-            const refreshToken = authContextRef.current?.refreshToken;
+            const refreshToken = authContextRef.current?.refreshToken || localStorage.getItem('refresh_token');
             if (!refreshToken) {
               throw new Error("No refresh token available");
             }
@@ -61,7 +61,11 @@ client.interceptors.response.use(
               );
             }
 
-            authContextRef.current?.setAccessToken(nextAccessToken);
+            if (authContextRef.current?.setAccessToken) {
+              authContextRef.current.setAccessToken(nextAccessToken);
+            } else {
+              localStorage.setItem('access_token', nextAccessToken);
+            }
             originalRequest.headers.Authorization = `Bearer ${nextAccessToken}`;
             return client(originalRequest);
           } catch (refreshError) {

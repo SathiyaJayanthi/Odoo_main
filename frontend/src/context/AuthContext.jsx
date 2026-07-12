@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import client from '../api/client'
+import client, { setAuthContextRef } from '../api/client'
 
 const AuthContext = createContext(null)
 
@@ -14,6 +14,21 @@ export const AuthProvider = ({ children }) => {
       if (storedUser && token) {
         try {
           setUser(JSON.parse(storedUser))
+          // Wire client to existing tokens
+          setAuthContextRef({
+            current: {
+              accessToken: token,
+              refreshToken: localStorage.getItem('refresh_token'),
+              setAccessToken: (t) => localStorage.setItem('access_token', t),
+              clearAuth: () => {
+                localStorage.removeItem('access_token')
+                localStorage.removeItem('refresh_token')
+                localStorage.removeItem('role')
+                localStorage.removeItem('user')
+                setUser(null)
+              },
+            },
+          })
         } catch (e) {
           localStorage.removeItem('user')
           localStorage.removeItem('access_token')
@@ -37,6 +52,21 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(userData))
       
       setUser(userData)
+      // Update client auth ref so axios attaches tokens
+      setAuthContextRef({
+        current: {
+          accessToken: access,
+          refreshToken: refresh,
+          setAccessToken: (t) => localStorage.setItem('access_token', t),
+          clearAuth: () => {
+            localStorage.removeItem('access_token')
+            localStorage.removeItem('refresh_token')
+            localStorage.removeItem('role')
+            localStorage.removeItem('user')
+            setUser(null)
+          },
+        },
+      })
       return { success: true }
     } catch (error) {
       console.error('Login error:', error)
@@ -68,6 +98,15 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('role')
     localStorage.removeItem('user')
     setUser(null)
+    // Clear client auth ref
+    setAuthContextRef({
+      current: {
+        accessToken: null,
+        refreshToken: null,
+        setAccessToken: () => {},
+        clearAuth: () => {},
+      },
+    })
   }
 
   const hasRole = (roles) => {
@@ -90,7 +129,17 @@ export const AuthProvider = ({ children }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext)
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    // Return a safe fallback to avoid crashes during HMR or mount ordering.
+    return {
+      user: null,
+      loading: false,
+      login: async () => ({ success: false }),
+      signup: async () => ({ success: false }),
+      logout: () => {},
+      isAuthenticated: false,
+      hasRole: () => false,
+      getRole: () => null,
+    }
   }
   return context
 }

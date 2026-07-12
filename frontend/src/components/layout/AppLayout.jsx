@@ -49,7 +49,7 @@ const AppLayout = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50 flex">
+    <div className="h-dvh bg-slate-50/50 flex overflow-hidden">
       {/* Sidebar for Desktop: Fixed on md and above */}
       <aside className="hidden md:flex flex-col w-64 bg-slate-900 text-white shrink-0 border-r border-slate-800">
         {/* Brand */}
@@ -211,7 +211,7 @@ const AppLayout = ({ children }) => {
         )}
 
         {/* Content Section */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8">
+        <main className="flex-1 overflow-y-auto no-scrollbar p-6 md:p-8">
           <div className="max-w-7xl mx-auto space-y-6">
             {children}
           </div>
