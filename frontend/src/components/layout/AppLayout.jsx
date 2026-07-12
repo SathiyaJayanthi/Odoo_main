@@ -9,7 +9,8 @@ import {
   DollarSign, 
   LogOut,
   Menu,
-  X
+  X,
+  Navigation
 } from 'lucide-react'
 
 const AppLayout = ({ children }) => {
@@ -35,6 +36,7 @@ const AppLayout = ({ children }) => {
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Vehicles', path: '/vehicles', icon: Truck },
     { name: 'Drivers', path: '/drivers', icon: Users },
+    { name: 'Trips', path: '/trips', icon: Navigation },
     { name: 'Maintenance', path: '/maintenance', icon: Wrench },
     { name: 'Finance', path: '/finance', icon: DollarSign },
   ]

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import Button from '../components/common/Button'
@@ -105,6 +105,13 @@ const Login = () => {
               Sign In
             </Button>
           </form>
+
+          <p className="mt-4 text-center text-xs text-slate-400">
+            Don't have an account?{' '}
+            <Link to="/signup" className="font-semibold text-indigo-400 hover:text-indigo-300 transition-colors">
+              Sign up
+            </Link>
+          </p>
 
           {/* Demo Profiles Card */}
           <div className="border-t border-slate-700/50 pt-6">

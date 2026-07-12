@@ -255,7 +255,7 @@ const FinancePage = () => {
             className="rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer max-w-md"
           >
             <option value="">Choose a Vehicle...</option>
-            {vehicles.map((v) => (
+            {vehicles.filter(v => v.status !== 'Retired').map((v) => (
               <option key={v.id} value={v.id}>
                 {v.name_model} ({v.registration_number})
               </option>
@@ -422,7 +422,7 @@ const FinancePage = () => {
                 onChange={(e) => setFuelFormData(prev => ({ ...prev, vehicle_id: e.target.value }))}
               >
                 <option value="" disabled>Select vehicle</option>
-                {vehicles.map((v) => (
+                {vehicles.filter(v => v.status !== 'Retired').map((v) => (
                   <option key={v.id} value={v.id}>
                     {v.name_model} ({v.registration_number})
                   </option>
@@ -513,7 +513,7 @@ const FinancePage = () => {
                 onChange={(e) => setExpenseFormData(prev => ({ ...prev, vehicle_id: e.target.value }))}
               >
                 <option value="" disabled>Select vehicle</option>
-                {vehicles.map((v) => (
+                {vehicles.filter(v => v.status !== 'Retired').map((v) => (
                   <option key={v.id} value={v.id}>
                     {v.name_model} ({v.registration_number})
                   </option>

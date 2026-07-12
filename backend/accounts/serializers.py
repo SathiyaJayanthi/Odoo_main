@@ -9,7 +9,7 @@ class SignupSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True, min_length=8)
     full_name = serializers.CharField(required=True)
-    role = serializers.ChoiceField(choices=[choice[0] for choice in User.ROLE_CHOICES])
+    role = serializers.ChoiceField(choices=[choice[0] for choice in User.ROLE_CHOICES], required=False, default='driver')
 
     def validate_email(self, value):
         if User.objects.filter(email__iexact=value).exists():

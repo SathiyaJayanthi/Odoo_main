@@ -249,7 +249,7 @@ const MaintenancePage = () => {
                 onChange={(e) => setLogFormData(prev => ({ ...prev, vehicle_id: e.target.value }))}
               >
                 <option value="" disabled>Select a vehicle</option>
-                {vehicles.map((v) => (
+                {vehicles.filter(v => v.status !== 'Retired').map((v) => (
                   <option key={v.id} value={v.id}>
                     {v.name_model} ({v.registration_number}) [{v.status}]
                   </option>
