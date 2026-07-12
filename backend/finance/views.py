@@ -10,18 +10,34 @@ from .serializers import CostSummarySerializer, ExpenseSerializer, FuelLogSerial
 from .services import get_vehicle_cost_summary
 
 
-class FuelLogCreateView(generics.CreateAPIView):
+class FuelLogCreateView(generics.ListCreateAPIView):
 	serializer_class = FuelLogSerializer
 
 	def get_permissions(self):
-		return [IsAuthenticated(), IsRole(['driver', 'financial_analyst'])]
+		if self.request.method == 'POST':
+			return [IsAuthenticated(), IsRole(['driver', 'financial_analyst'])]
+		return [IsAuthenticated(), IsRole(['driver', 'financial_analyst', 'fleet_manager'])]
+
+	def get_queryset(self):
+		queryset = FuelLog.objects.all().order_by('-log_date')
+		vehicle_id = self.request.query_params.get('vehicle_id')
+		if vehicle_id:
+			queryset = queryset.filter(vehicle_id=vehicle_id)
+		return queryset
 
 
-class ExpenseCreateView(generics.CreateAPIView):
+class ExpenseCreateView(generics.ListCreateAPIView):
 	serializer_class = ExpenseSerializer
 
 	def get_permissions(self):
 		return [IsAuthenticated(), IsRole(['financial_analyst', 'fleet_manager'])]
+
+	def get_queryset(self):
+		queryset = Expense.objects.all().order_by('-expense_date')
+		vehicle_id = self.request.query_params.get('vehicle_id')
+		if vehicle_id:
+			queryset = queryset.filter(vehicle_id=vehicle_id)
+		return queryset
 
 
 class VehicleCostSummaryView(APIView):
