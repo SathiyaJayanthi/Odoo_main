@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from common.permissions import IsRole
 from vehicles.models import Vehicle
 
+from .models import FuelLog, Expense
 from .serializers import CostSummarySerializer, ExpenseSerializer, FuelLogSerializer
 from .services import get_vehicle_cost_summary
 

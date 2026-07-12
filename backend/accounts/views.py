@@ -1,4 +1,5 @@
 from rest_framework import status
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,24 +15,28 @@ class SignupView(APIView):
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            return Response(serializer.to_representation(user), status=status.HTTP_201_CREATED)
-
-        errors = serializer.errors
-        field_name = next(iter(errors), None)
-        if field_name:
-            first_error = errors[field_name][0]
+            payload = serializer.to_representation(user)
             return Response(
                 {
-                    'error': {
-                        'field': field_name,
-                        'message': first_error,
-                    }
+                    'message': 'Account created successfully',
+                    'user': payload,
+                    'id': payload['id'],
+                    'email': payload['email'],
+                    'role': payload['role'],
                 },
-                status=status.HTTP_400_BAD_REQUEST,
+                status=status.HTTP_201_CREATED,
             )
 
+        errors = serializer.errors
+        first_field = next(iter(errors), None)
+        first_error = errors.get(first_field, ['Invalid signup data'])[0] if first_field else 'Invalid signup data'
         return Response(
-            {'error': {'message': 'Invalid signup data'}},
+            {
+                'error': {
+                    'field': first_field or 'request',
+                    'message': first_error,
+                }
+            },
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -44,10 +49,17 @@ class LoginView(TokenObtainPairView):
         serializer = self.get_serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-        except Exception:
+        except AuthenticationFailed:
             return Response(
-                {'error': {'message': 'Invalid email or password'}},
+                {'error': {'field': 'credentials', 'message': 'Invalid email or password'}},
                 status=status.HTTP_401_UNAUTHORIZED,
+            )
+        except Exception:
+            field_name = next(iter(serializer.errors), 'email')
+            first_error = serializer.errors.get(field_name, ['Invalid email or password'])[0]
+            return Response(
+                {'error': {'field': field_name, 'message': first_error}},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         data = serializer.validated_data

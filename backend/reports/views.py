@@ -101,7 +101,8 @@ class ROIView(APIView):
             revenue = completed_trip_count * REVENUE_PER_TRIP
             cost_summary = get_vehicle_cost_summary(vehicle.id)
             cost = cost_summary['operational_cost']
-            roi_pct = ((revenue - cost) / cost * Decimal('100')) if cost > 0 else Decimal('0.00')
+            acq_cost = vehicle.acquisition_cost
+            roi_pct = ((revenue - cost) / acq_cost * Decimal('100')) if acq_cost > 0 else Decimal('0.00')
             data.append({
                 'vehicle_id': vehicle.id,
                 'revenue': float(revenue),
