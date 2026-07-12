@@ -1,4 +1,19 @@
 from rest_framework.permissions import BasePermission
+from accounts.models import User
+
+
+class IsRole(BasePermission):
+    def __init__(self, allowed_roles=None):
+        self.allowed_roles = allowed_roles or []
+
+    def has_permission(self, request, view):
+        user = request.user
+        if not user or not user.is_authenticated:
+            return False
+
+        # Always validate role from the DB-backed user record, never request payload.
+        role = User.objects.filter(pk=user.pk).values_list('role', flat=True).first()
+        return role in self.allowed_roles
 
 
 class IsFleetManager(BasePermission):

@@ -8,6 +8,6 @@ urlpatterns = [
     path('api/v1/drivers/', include('drivers.urls')),
     path('api/v1/trips/', include('trips.urls')),
     path('api/v1/maintenance/', include('maintenance.urls')),
-    path('api/v1/finance/', include('finance.urls')),
+    path('api/v1/', include('finance.urls')),
     path('api/v1/reports/', include('reports.urls')),
 ]
