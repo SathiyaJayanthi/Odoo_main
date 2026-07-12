@@ -1,62 +1,48 @@
 # TransitOps — Smart Transport Operations Platform
 
-TransitOps is a unified enterprise web platform designed for fleet managers, safety officers, and financial analysts to optimize transport workflows, enforce driver licensing compliance, track maintenance life-cycles, and monitor vehicle ROI statistics.
+TransitOps is a full-stack fleet operations management platform that helps transportation teams safely plan trips, manage vehicle maintenance, enforce driver licensing compliance, and monitor fleet ROI in a single responsive web interface.
 
-## Problem Statement Summary
-Fleet operators often face logistics bottlenecks and compliance risks, such as:
-1. **Compliance Gaps:** Dispatched trips assigning drivers with expired or suspended commercial licenses.
-2. **Resource Conflicts:** Double-booking or double-dispatching vehicles and drivers due to database race conditions.
-3. **Capacity Overload:** Creating trips with cargo weights exceeding a vehicle's maximum load limits.
-4. **Maintenance Disconnection:** Sending active transit vehicles to maintenance shops or scheduling trips on vehicles under service.
-5. **Cost Fragmentations:** Difficulty consolidating fuel logs, service fees, and trip revenues to view real-time ROI reports.
+## Documentation
+This repository maintains a structured docs suite inside the `docs/` folder:
 
-TransitOps eliminates these issues by implementing a unified React client and Django REST backend that integrates strict database row locks, automated compliance calculations, and live performance metrics.
+- `docs/README.md` — Documentation index and navigation
+- `docs/SETUP.md` — Local development and deployment setup
+- `docs/ARCHITECTURE.md` — System architecture and component design
+- `docs/API.md` — REST API reference
+- `docs/DB_SCHEMA.md` — Data model and schema overview
+- `docs/DEMO_SCRIPT.md` — Guided demo flow for reviewers
+- `docs/TEST_CHECKLIST.md` — Manual QA checklist and acceptance criteria
 
-## Features Implemented
-- **Interactive Role Dashboard:** Displays real-time KPIs (Fleet Utilization %, Active Trips, Vehicles in Shop, Available Vehicles) derived dynamically from report views.
-- **Unified Vehicle Registry:** Complete CRUD grid supporting vehicle classifications, status controls (Available, On Trip, In Shop, Retired), and odometer tracking. Prevents duplicate registration inputs with field-level highlights.
-- **Driver Compliance Tracker:** Monitors active drivers, compliance statuses, and CDL expiry milestones. Computes and flags expiring licenses (<= 30 days) client-side and blocks expired dispatches server-side.
-- **Trips Dispatch Engine:** Supports planning routes (Drafts), dispatching trips, completing loops (recording fuel consumption and updating odometers), and cancellations. Implements pessimistic database locks (`select_for_update()`) to prevent race conditions.
-- **Service Maintenance Shop:** Logs vehicle maintenance, automatically transitioning vehicles to `In Shop` (which removes them from dispatch selections) and restoring them to `Available` upon service closure. Blocks maintenance tickets on active `On Trip` vehicles.
-- **Financial Registry & ROI Analytics:** Tracks fuel logs, operational expenses, and per-vehicle cost summaries. Renders vehicle-by-vehicle ROI grids for the financial analyst.
-- **CSV Data Exporter:** Allows downloading consolidated operational reports.
+## Project Summary
+- **Backend:** Django REST Framework, JWT authentication, transactional trip dispatch, maintenance lifecycle enforcement, finance analytics
+- **Frontend:** React 19, Vite, Tailwind CSS 4, React Router 7, TanStack Query, Axios
+- **Database:** SQLite for local development and demo usage
+- **Key modules:** Vehicles, Drivers, Trips, Maintenance, Finance, Reports
 
-## Tech Stack
-- **Backend:** Django 5.2, Django REST Framework 3.17, SQLite, JWT authentication (`djangorestframework-simplejwt`)
-- **Frontend:** React 19 (Vite), Tailwind CSS 4, React Router 7, TanStack Query, Axios, Lucide Icons
-
-## Setup Instructions
-
-### Prerequisites
-- Python 3.10+
-- Node.js 18+
-
-### Backend Setup
+## Quick Start
+### Backend
 ```bash
 cd backend
 python -m venv .venv
-# Activate virtual environment:
-# On Windows:
-.venv\Scripts\activate
-# On Linux/macOS:
 source .venv/bin/activate
-
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py seed_demo_data
-python manage.py runserver
+python manage.py runserver 8000
 ```
-Backend runs at http://localhost:8000
 
-### Frontend Setup
+### Frontend
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev -- --host 0.0.0.0
 ```
-Frontend runs at http://localhost:5176
 
-## Demo Credentials
+### Access
+- Frontend: `http://localhost:5173`
+- Backend API: `http://localhost:8000/api/v1`
+
+## Demo Users
 | Email | Password | Role |
 |---|---|---|
 | fleet_manager@demo.com | demopass123 | Fleet Manager |
@@ -64,11 +50,16 @@ Frontend runs at http://localhost:5176
 | safety_officer@demo.com | demopass123 | Safety Officer |
 | financial_analyst@demo.com | demopass123 | Financial Analyst |
 
-## Known Limitations / Descoped Items
-The following features are explicitly out of scope and descoped for the initial version:
-- **PDF Report Exporter:** Consolidated reports are exported exclusively in CSV format; PDF print exports are descoped.
-- **Email/SMS Reminders:** Automatic notifications for license expiries or service milestones are descoped.
-- **Document Management:** Uploading digital copies of vehicle permits, insurances, or driver licenses is out of scope.
-- **Dark Mode Theme Support:** The interface features a tailored premium dark-mode sidebar, but full light/dark client toggling is descoped.
-- **Multi-Tenant Org Isolation:** Multi-tenant workspace separation is descoped (single system organization).
-- **Real-Time Telematics GPS Tracking:** Active map route integrations and live GPS telemetry streams are out of scope.
+## Repository Layout
+```text
+Odoo_main/
+├── backend/          # Django REST backend application
+├── frontend/         # React + Vite frontend SPA
+├── docs/             # Project documentation
+└── README.md         # Project landing page and quick start
+```
+
+## Notes
+- The frontend expects the backend API at `http://localhost:8000/api/v1`
+- The app uses JWT authorization for all protected API requests
+- `docs/SETUP.md` contains more detailed environment and local run instructions
