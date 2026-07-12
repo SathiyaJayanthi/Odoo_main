@@ -34,12 +34,12 @@ const AppLayout = ({ children }) => {
 
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Vehicles', path: '/vehicles', icon: Truck },
-    { name: 'Drivers', path: '/drivers', icon: Users },
-    { name: 'Trips', path: '/trips', icon: Navigation },
-    { name: 'Maintenance', path: '/maintenance', icon: Wrench },
-    { name: 'Finance', path: '/finance', icon: DollarSign },
-  ]
+    { name: 'Vehicles', path: '/vehicles', icon: Truck, roles: ['fleet_manager', 'driver', 'safety_officer', 'financial_analyst'] },
+    { name: 'Drivers', path: '/drivers', icon: Users, roles: ['fleet_manager', 'safety_officer'] },
+    { name: 'Trips', path: '/trips', icon: Navigation, roles: ['fleet_manager', 'driver'] },
+    { name: 'Maintenance', path: '/maintenance', icon: Wrench, roles: ['fleet_manager'] },
+    { name: 'Finance', path: '/finance', icon: DollarSign, roles: ['fleet_manager', 'financial_analyst'] },
+  ].filter(item => !item.roles || item.roles.includes(role))
 
   const isActive = (path) => {
     if (path === '/dashboard') {

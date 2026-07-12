@@ -46,6 +46,18 @@ const PublicRoute = ({ children }) => {
   return !isAuthenticated ? children : <Navigate to="/dashboard" replace />;
 };
 
+const RoleProtectedRoute = ({ allowedRoles, children }) => {
+  const { isAuthenticated, loading, getRole } = useAuth();
+  if (loading) return <LoadingScreen />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  const role = getRole();
+  return allowedRoles.includes(role) ? (
+    children
+  ) : (
+    <Navigate to="/dashboard" replace />
+  );
+};
+
 function App() {
   return (
     <Routes>
@@ -72,12 +84,63 @@ function App() {
             <AppLayout>
               <Routes>
                 <Route path="dashboard" element={<Dashboard />} />
-                <Route path="vehicles" element={<VehiclesPage />} />
-                <Route path="drivers" element={<DriversPage />} />
-                <Route path="maintenance" element={<MaintenancePage />} />
-                <Route path="trips" element={<TripsPage />} />
-                <Route path="finance" element={<FinancePage />} />
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                <Route
+                  path="vehicles"
+                  element={
+                    <RoleProtectedRoute
+                      allowedRoles={[
+                        "fleet_manager",
+                        "driver",
+                        "safety_officer",
+                        "financial_analyst",
+                      ]}
+                    >
+                      <VehiclesPage />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="drivers"
+                  element={
+                    <RoleProtectedRoute
+                      allowedRoles={["fleet_manager", "safety_officer"]}
+                    >
+                      <DriversPage />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="trips"
+                  element={
+                    <RoleProtectedRoute
+                      allowedRoles={["fleet_manager", "driver"]}
+                    >
+                      <TripsPage />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="maintenance"
+                  element={
+                    <RoleProtectedRoute allowedRoles={["fleet_manager"]}>
+                      <MaintenancePage />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="finance"
+                  element={
+                    <RoleProtectedRoute
+                      allowedRoles={["fleet_manager", "financial_analyst"]}
+                    >
+                      <FinancePage />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="*"
+                  element={<Navigate to="/dashboard" replace />}
+                />
               </Routes>
             </AppLayout>
           </ProtectedRoute>
