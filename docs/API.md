@@ -11,6 +11,7 @@ http://localhost:8000/api/v1
 The API uses JWT tokens for protected routes.
 
 ### Login
+
 ```
 POST /api/v1/auth/login/
 Content-Type: application/json
@@ -21,6 +22,7 @@ Content-Type: application/json
 ```
 
 Response:
+
 ```json
 {
   "access": "<jwt-access-token>",
@@ -32,6 +34,7 @@ Response:
 ```
 
 ### Refresh Token
+
 ```
 POST /api/v1/auth/refresh/
 Content-Type: application/json
@@ -41,6 +44,7 @@ Content-Type: application/json
 ```
 
 Response:
+
 ```json
 {
   "access": "<new-access-token>"
@@ -48,6 +52,7 @@ Response:
 ```
 
 ### Signup
+
 ```
 POST /api/v1/auth/signup/
 Content-Type: application/json
@@ -60,6 +65,7 @@ Content-Type: application/json
 ```
 
 Response:
+
 ```json
 {
   "id": 12,
@@ -72,6 +78,7 @@ Response:
 ## Vehicles
 
 ### List all vehicles
+
 ```
 GET /api/v1/vehicles/
 Authorization: Bearer <access-token>
@@ -80,6 +87,7 @@ Authorization: Bearer <access-token>
 Supports query parameters such as `status` and `type`.
 
 ### Create a vehicle
+
 ```
 POST /api/v1/vehicles/
 Authorization: Bearer <access-token>
@@ -97,12 +105,14 @@ Content-Type: application/json
 ```
 
 ### List available vehicles
+
 ```
 GET /api/v1/vehicles/available/
 Authorization: Bearer <access-token>
 ```
 
 ### Retrieve or update a vehicle
+
 ```
 GET /api/v1/vehicles/{id}/
 PATCH /api/v1/vehicles/{id}/
@@ -112,12 +122,14 @@ Authorization: Bearer <access-token>
 ## Drivers
 
 ### List drivers
+
 ```
 GET /api/v1/drivers/
 Authorization: Bearer <access-token>
 ```
 
 ### Create a driver
+
 ```
 POST /api/v1/drivers/
 Authorization: Bearer <access-token>
@@ -134,6 +146,7 @@ Content-Type: application/json
 ```
 
 ### Driver details and update
+
 ```
 GET /api/v1/drivers/{id}/
 PATCH /api/v1/drivers/{id}/
@@ -141,12 +154,14 @@ Authorization: Bearer <access-token>
 ```
 
 ### List available drivers
+
 ```
 GET /api/v1/drivers/available/
 Authorization: Bearer <access-token>
 ```
 
 ### Expiring licenses
+
 ```
 GET /api/v1/drivers/expiring-licenses/
 Authorization: Bearer <access-token>
@@ -155,6 +170,7 @@ Authorization: Bearer <access-token>
 ## Trips
 
 ### List trips
+
 ```
 GET /api/v1/trips/?status=Draft
 Authorization: Bearer <access-token>
@@ -163,6 +179,7 @@ Authorization: Bearer <access-token>
 Valid `status` values: `Draft`, `Dispatched`, `Completed`, `Cancelled`.
 
 ### Create a trip
+
 ```
 POST /api/v1/trips/
 Authorization: Bearer <access-token>
@@ -178,12 +195,14 @@ Content-Type: application/json
 ```
 
 ### Dispatch a trip
+
 ```
 POST /api/v1/trips/{id}/dispatch/
 Authorization: Bearer <access-token>
 ```
 
 ### Complete a trip
+
 ```
 POST /api/v1/trips/{id}/complete/
 Authorization: Bearer <access-token>
@@ -195,6 +214,7 @@ Content-Type: application/json
 ```
 
 ### Cancel a trip
+
 ```
 POST /api/v1/trips/{id}/cancel/
 Authorization: Bearer <access-token>
@@ -203,12 +223,14 @@ Authorization: Bearer <access-token>
 ## Maintenance
 
 ### List maintenance logs
+
 ```
 GET /api/v1/maintenance/
 Authorization: Bearer <access-token>
 ```
 
 ### Create a maintenance record
+
 ```
 POST /api/v1/maintenance/
 Authorization: Bearer <access-token>
@@ -221,6 +243,7 @@ Content-Type: application/json
 ```
 
 ### Close maintenance
+
 ```
 POST /api/v1/maintenance/{id}/close/
 Authorization: Bearer <access-token>
@@ -229,6 +252,7 @@ Authorization: Bearer <access-token>
 ## Finance
 
 ### Create a fuel log
+
 ```
 POST /api/v1/fuel-logs/
 Authorization: Bearer <access-token>
@@ -243,6 +267,7 @@ Content-Type: application/json
 ```
 
 ### Create an expense
+
 ```
 POST /api/v1/expenses/
 Authorization: Bearer <access-token>
@@ -257,6 +282,7 @@ Content-Type: application/json
 ```
 
 ### Vehicle cost summary
+
 ```
 GET /api/v1/vehicles/{id}/cost-summary/
 Authorization: Bearer <access-token>
@@ -265,36 +291,42 @@ Authorization: Bearer <access-token>
 ## Reports
 
 ### Dashboard metrics
+
 ```
 GET /api/v1/reports/dashboard/
 Authorization: Bearer <access-token>
 ```
 
 ### Fuel efficiency
+
 ```
 GET /api/v1/reports/fuel-efficiency/?vehicle_id=1
 Authorization: Bearer <access-token>
 ```
 
 ### ROI report
+
 ```
 GET /api/v1/reports/roi/?vehicle_id=1
 Authorization: Bearer <access-token>
 ```
 
 ### Maintenance alerts
+
 ```
 GET /api/v1/reports/maintenance-alerts/
 Authorization: Bearer <access-token>
 ```
 
 ### Export CSV report
+
 ```
 GET /api/v1/reports/export/?type=csv
 Authorization: Bearer <access-token>
 ```
 
 ## Response Conventions
+
 - `200` / `201`: Success
 - `400`: Validation failure or business rule violation
 - `401`: Missing or invalid authentication token
@@ -302,7 +334,9 @@ Authorization: Bearer <access-token>
 - `409`: Conflict when a resource state prevents the requested action
 
 ## Common Error Behavior
+
 The frontend surfaces backend errors in toast notifications using the API response `message` field where available. Examples:
+
 - `Van-05 is currently unavailable for dispatch.`
 - `Driver license has expired.`
 - `Vehicle is already in maintenance.`
