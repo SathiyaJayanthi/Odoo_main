@@ -61,6 +61,7 @@ Transit fleet managers and financial analysts struggle with fragmented operation
 2. Look at the **Reports Center** widget and click **Export CSV Report**. This downloads `transitops_operations_report.csv` to your computer.
 3. If logged in as the **Financial Analyst**, view the **Vehicle Return on Investment (ROI)** performance summary table directly on the Dashboard, showcasing live computed revenue ($2,000 per completed trip) versus cost (fuel logs and maintenance log totals) to assess asset yield.
 4. **Closing**: TransitOps locks down the operational loop—ensuring strict regulatory compliance, race-condition immunity, and instant reporting visibility.
+5. "We also added a lightweight predictive-maintenance alert — a rule-based risk score using days-since-service and usage since last service — to flag vehicles that are likely due for maintenance before they break down, no ML model or external API required."
 
 ---
 

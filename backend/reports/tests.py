@@ -1,10 +1,13 @@
 from django.urls import reverse
+from django.utils import timezone
+from datetime import timedelta
 from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory, APITestCase
 
 from accounts.models import User
 from common.permissions import IsRole
 from drivers.models import Driver
+from maintenance.models import MaintenanceLog
 from trips.models import Trip
 from vehicles.models import Vehicle
 from reports.views import DashboardView, ExportView, FuelEfficiencyView, ROIView
@@ -197,3 +200,47 @@ class ReportsAPITests(APITestCase):
         permission = IsRole(['financial_analyst'])
 
         self.assertFalse(permission.has_permission(drf_request, None))
+
+    def test_maintenance_alerts_include_old_closed_log_and_exclude_recent(self):
+        risky_vehicle = Vehicle.objects.create(
+            registration_number='VH-401',
+            name_model='Risk Van',
+            type='Van',
+            max_load_capacity=1000,
+            acquisition_cost=100000,
+            odometer=3500,
+            status='Available',
+        )
+        recent_vehicle = Vehicle.objects.create(
+            registration_number='VH-402',
+            name_model='Fresh Van',
+            type='Van',
+            max_load_capacity=1000,
+            acquisition_cost=100000,
+            odometer=300,
+            status='Available',
+        )
+
+        MaintenanceLog.objects.create(
+            vehicle=risky_vehicle,
+            description='Old closed maintenance',
+            status='Closed',
+            closed_at=timezone.now() - timedelta(days=130),
+        )
+        MaintenanceLog.objects.create(
+            vehicle=recent_vehicle,
+            description='Recent closed maintenance',
+            status='Closed',
+            closed_at=timezone.now() - timedelta(days=10),
+        )
+
+        self.client.force_authenticate(user=self.fleet_manager)
+        response = self.client.get(reverse('reports-maintenance-alerts'))
+
+        self.assertEqual(response.status_code, 200)
+        returned_ids = {row['vehicle_id'] for row in response.data}
+        self.assertIn(risky_vehicle.id, returned_ids)
+        self.assertNotIn(recent_vehicle.id, returned_ids)
+
+        risky_row = next(row for row in response.data if row['vehicle_id'] == risky_vehicle.id)
+        self.assertIn(risky_row['risk_level'], ['medium', 'high'])

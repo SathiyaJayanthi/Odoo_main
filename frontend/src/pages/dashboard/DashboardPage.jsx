@@ -11,10 +11,11 @@ import {
   UserRoundCheck,
   Wrench,
 } from "lucide-react";
-import { getDashboardStats } from "../../api/reports";
+import { getDashboardStats, getMaintenanceAlerts } from "../../api/reports";
 import { listDrivers } from "../../api/drivers";
 import { listVehicles } from "../../api/vehicles";
 import Button from "../../components/common/Button";
+import { StatusBadge } from "../../components/shared/StatusBadge";
 
 const dashboardCards = [
   {
@@ -82,6 +83,11 @@ const DashboardPage = () => {
   const { data: drivers = [] } = useQuery({
     queryKey: ["drivers", "dashboard"],
     queryFn: () => listDrivers({ status: "Available" }),
+  });
+
+  const { data: maintenanceAlerts = [] } = useQuery({
+    queryKey: ["reports", "maintenance-alerts"],
+    queryFn: getMaintenanceAlerts,
   });
 
   const attentionVehicles = (vehicles || []).filter(
@@ -277,6 +283,47 @@ const DashboardPage = () => {
                 </p>
               )}
             </div>
+
+            {maintenanceAlerts.length > 0 && (
+              <div>
+                <p className="text-sm font-semibold text-gray-700">
+                  Predictive Maintenance Alerts
+                </p>
+                <ul className="mt-2 space-y-2">
+                  {maintenanceAlerts.map((alert) => (
+                    <li
+                      key={alert.vehicle_id}
+                      className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-sm text-gray-600"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="font-medium text-gray-700">
+                            {alert.registration_number} - {alert.name_model}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {alert.days_since_service} days since last service
+                          </p>
+                        </div>
+                        <StatusBadge
+                          status={alert.risk_level}
+                          className="text-xs"
+                          colorMap={{
+                            medium: {
+                              dot: "bg-amber-500",
+                              text: "text-amber-700",
+                            },
+                            high: {
+                              dot: "bg-red-500",
+                              text: "text-red-700",
+                            },
+                          }}
+                        />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </div>
