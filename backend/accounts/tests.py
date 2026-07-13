@@ -22,6 +22,7 @@ class DummyRoleView(APIView):
     def get(self, request):
         return Response({'ok': True})
 
+
 class AuthAPITests(APITestCase):
     def test_signup_creates_user_with_hashed_password_and_role(self):
         response = self.client.post(
@@ -59,6 +60,23 @@ class AuthAPITests(APITestCase):
         user = User.objects.get(email='default.role@example.com')
         self.assertEqual(user.role, 'driver')
 
+    def test_signup_returns_success_message_and_user_payload(self):
+        response = self.client.post(
+            reverse('signup'),
+            {
+                'email': 'success.message@example.com',
+                'password': 'SecurePass123',
+                'full_name': 'Success Message User',
+                'role': 'driver',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['message'], 'Account created successfully')
+        self.assertEqual(response.data['user']['email'], 'success.message@example.com')
+        self.assertEqual(response.data['user']['role'], 'driver')
+
     def test_signup_rejects_duplicate_email(self):
         User.objects.create_user(
             email='duplicate@example.com',
@@ -95,6 +113,36 @@ class AuthAPITests(APITestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['error']['field'], 'role')
+
+    def test_signup_rejects_weak_password(self):
+        response = self.client.post(
+            reverse('signup'),
+            {
+                'email': 'weak.password@example.com',
+                'password': 'password123',
+                'full_name': 'Weak Password User',
+                'role': 'driver',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error']['field'], 'password')
+
+    def test_signup_rejects_blank_full_name(self):
+        response = self.client.post(
+            reverse('signup'),
+            {
+                'email': 'blank.name@example.com',
+                'password': 'SecurePass123',
+                'full_name': '   ',
+                'role': 'driver',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error']['field'], 'full_name')
 
     def test_login_succeeds_and_returns_tokens_and_user_info(self):
         user = User.objects.create_user(

@@ -1,20 +1,38 @@
+import re
+
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from accounts.models import User
 
+PASSWORD_PATTERN = re.compile(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$')
+
 
 class SignupSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    email = serializers.EmailField(trim_whitespace=True)
     password = serializers.CharField(write_only=True, min_length=8)
-    full_name = serializers.CharField(required=True)
+    full_name = serializers.CharField(required=True, trim_whitespace=True, min_length=2)
     role = serializers.ChoiceField(choices=[choice[0] for choice in User.ROLE_CHOICES], required=False, default='driver')
 
     def validate_email(self, value):
-        if User.objects.filter(email__iexact=value).exists():
+        normalized = value.strip().lower()
+        if User.objects.filter(email__iexact=normalized).exists():
             raise serializers.ValidationError('A user with this email already exists.')
+        return normalized
+
+    def validate_password(self, value):
+        if not PASSWORD_PATTERN.match(value):
+            raise serializers.ValidationError(
+                'Password must be at least 8 characters and include uppercase, lowercase, and a number.'
+            )
         return value
+
+    def validate_full_name(self, value):
+        cleaned = ' '.join(value.split())
+        if not cleaned:
+            raise serializers.ValidationError('Full name is required.')
+        return cleaned
 
     def create(self, validated_data):
         password = validated_data.pop('password')

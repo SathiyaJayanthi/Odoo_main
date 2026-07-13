@@ -125,6 +125,25 @@ class ReportsAPITests(APITestCase):
             acquisition_cost=100000,
             status='Available',
         )
+        # No trips completed, so revenue = 0, cost = 0
+        request = self.factory.get(reverse('reports-roi'), {'vehicle_id': vehicle.id})
+        request.user = self.financial_analyst
+        drf_request = Request(request)
+        drf_request.user = self.financial_analyst
+        response = ROIView().get(drf_request)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data[0]['roi_pct'], 0.0)
+
+    def test_roi_calculation_with_revenue_and_cost(self):
+        vehicle = Vehicle.objects.create(
+            registration_number='VH-201',
+            name_model='Van Z',
+            type='Van',
+            max_load_capacity=1000,
+            acquisition_cost=100000,
+            status='Available',
+        )
         driver = Driver.objects.create(
             name='Driver Three',
             license_number='LIC-003',
@@ -134,6 +153,8 @@ class ReportsAPITests(APITestCase):
             safety_score=95,
             status='Available',
         )
+        
+        # 1 completed trip -> 2000.00 revenue
         Trip.objects.create(
             vehicle=vehicle,
             driver=driver,
@@ -145,6 +166,26 @@ class ReportsAPITests(APITestCase):
             status='Completed',
         )
 
+        from finance.models import FuelLog
+        # Fuel log with cost 500.00
+        FuelLog.objects.create(
+            vehicle=vehicle,
+            liters=10,
+            cost=500.00,
+            log_date='2026-07-12',
+        )
+
+        # Maintenance log with cost 500.00
+        MaintenanceLog.objects.create(
+            vehicle=vehicle,
+            description='Maintenance log',
+            cost=500.00,
+            status='Closed',
+            closed_at=timezone.now(),
+        )
+
+        # ROI = (Revenue - (Fuel + Maintenance)) / Acquisition Cost * 100
+        # ROI = (2000 - (500 + 500)) / 100000 * 100 = 1000 / 100000 * 100 = 1%
         request = self.factory.get(reverse('reports-roi'), {'vehicle_id': vehicle.id})
         request.user = self.financial_analyst
         drf_request = Request(request)
@@ -152,7 +193,7 @@ class ReportsAPITests(APITestCase):
         response = ROIView().get(drf_request)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data[0]['roi_pct'], 0.0)
+        self.assertEqual(response.data[0]['roi_pct'], 1.0)
 
     def test_csv_export_returns_csv_response(self):
         vehicle = Vehicle.objects.create(
